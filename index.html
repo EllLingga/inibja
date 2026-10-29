@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ROYAL 21</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body { background: #050b07; color: #e2e8f0; font-family: system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; overflow: hidden; }
+    header { background: #09090b; border-bottom: 1px solid #78350f; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .gold-text { color: #facc15; font-weight: bold; font-size: 16px; letter-spacing: 1px; }
+    .balance-box { background: #18181b; border: 1px solid #ca8a04; padding: 4px 12px; border-radius: 20px; color: #fde047; font-weight: bold; font-size: 14px; }
+    
+    main { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+    .screen { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; }
+    .hidden { display: none !important; }
+    
+    /* Table Styling */
+    .felt-table { background: radial-gradient(circle, #185235 0%, #0f3823 70%, #07190f 100%); position: relative; }
+    .card-area { display: flex; justify-content: center; min-height: 85px; margin: 8px 0; gap: 4px; }
+    .card { width: 50px; h: 75px; background: #fff; border-radius: 6px; border: 1px solid #ccc; color: #111; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; font-weight: bold; font-size: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .card.red { color: #dc2626; }
+    .card-back { background: #1e1b4b; border: 1px solid #ca8a04; }
+    
+    .bet-spot { width: 70px; height: 70px; border: 2px dashed #facc15; border-radius: 50%; margin: 10px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
+    .bet-amount { color: #fde047; font-weight: bold; font-size: 14px; }
+    
+    .chip-bar { display: flex; justify-content: center; gap: 8px; margin: 8px 0; }
+    .chip { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #fff; color: #fff; font-weight: bold; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .chip-5 { background: #b91c1c; }
+    .chip-25 { background: #047857; }
+    .chip-100 { background: #18181b; border-color: #facc15; color: #facc15; }
+    
+    .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    button.btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; color: #fff; }
+    .btn-gold { background: linear-gradient(135deg, #d97706, #facc15); color: #000; grid-column: span 3; }
+    .btn-clear { background: #27272a; color: #a1a1aa; }
+    .btn-hit { background: #16a34a; }
+    .btn-stand { background: #dc2626; }
+    .btn-double { background: #d97706; color: #000; }
+    .btn-full { grid-column: span 4; }
+
+    nav { background: #09090b; border-top: 1px solid #78350f; display: flex; justify-content: space-around; padding: 10px 0; }
+    nav button { background: none; border: none; color: #71717a; font-size: 11px; font-weight: bold; cursor: pointer; }
+    nav button.active { color: #facc15; }
+    
+    .banner { background: #09090b; border: 1px solid #facc15; text-align: center; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <div class="gold-text">ROYAL 21</div>
+      <div style="font-size: 10px; color: #a1a1aa;">LVL 1</div>
+    </div>
+    <div class="balance-box">🪙 <span id="chipBalance">1,000</span></div>
+  </header>
+
+  <main>
+    <!-- HOME SCREEN -->
+    <section id="screenHome" class="screen">
+      <div style="text-align: center; margin: auto 0;">
+        <h2 class="gold-text" style="font-size: 24px; margin-bottom: 8px;">ROYAL LOUNGE</h2>
+        <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 20px;">Blackjack 21 Mobile Casino</p>
+        <button onclick="switchTab('play')" class="btn btn-gold btn-full" style="padding: 16px; font-size: 14px;">MAIN SEKARANG</button>
+      </div>
+    </section>
+
+    <!-- GAME TABLE SCREEN -->
+    <section id="screenPlay" class="screen felt-table hidden">
+      <!-- Dealer Area -->
+      <div style="text-align: center;">
+        <div style="font-size: 11px; color: #fde047; font-weight: bold;">DEALER (<span id="dealerScore">0</span>)</div>
+        <div id="dealerCards" class="card-area"></div>
+      </div>
+
+      <!-- Center Area -->
+      <div>
+        <div id="gameBanner" class="banner hidden">
+          <div id="bannerTitle" class="gold-text">BLACKJACK!</div>
+        </div>
+        <div class="bet-spot">
+          <span style="font-size: 9px; color: #aaa;">TARUHAN</span>
+          <span id="currentBetDisplay" class="bet-amount">0</span>
+        </div>
+      </div>
+
+      <!-- Player Area -->
+      <div>
+        <div style="text-align: center; font-size: 11px; color: #fde047; font-weight: bold;">PEMAIN (<span id="playerScore">0</span>)</div>
+        <div id="playerCards" class="card-area"></div>
+
+        <!-- Chips Selector -->
+        <div id="chipSelectorBar" class="chip-bar">
+          <div onclick="addBet(5)" class="chip chip-5">5</div>
+          <div onclick="addBet(25)" class="chip chip-25">25</div>
+          <div onclick="addBet(100)" class="chip chip-100">100</div>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="btn-grid">
+          <button id="btnClear" onclick="clearBet()" class="btn btn-clear">CLEAR</button>
+          <button id="btnDeal" onclick="startRound()" class="btn btn-gold">DEAL</button>
+          
+          <button id="btnHit" onclick="playerHit()" class="btn btn-hit hidden">HIT</button>
+          <button id="btnStand" onclick="playerStand()" class="btn btn-stand hidden">STAND</button>
+          <button id="btnDouble" onclick="playerDouble()" class="btn btn-double hidden">DOUBLE</button>
+          <button id="btnNewRound" onclick="resetToBetting()" class="btn btn-gold btn-full hidden">RONDE BARU</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <button id="navHome" onclick="switchTab('home')" class="active">Lobby</button>
+    <button id="navPlay" onclick="switchTab('play')">Meja</button>
+  </nav>
+
+  <script>
+    const SUITS = ['♠', '♥', '♦', '♣'];
+    const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+    let state = {
+      balance: 1000,
+      currentBet: 0,
+      deck: [],
+      playerHand: [],
+      dealerHand: [],
+      gameState: 'BETTING'
+    };
+
+    function switchTab(tab) {
+      document.getElementById('screenHome').classList.add('hidden');
+      document.getElementById('screenPlay').classList.add('hidden');
+      document.getElementById('navHome').classList.remove('active');
+      document.getElementById('navPlay').classList.remove('active');
+
+      if (tab === 'home') {
+        document.getElementById('screenHome').classList.remove('hidden');
+        document.getElementById('navHome').classList.add('active');
+      } else {
+        document.getElementById('screenPlay').classList.remove('hidden');
+        document.getElementById('navPlay').classList.add('active');
+      }
+    }
+
+    function createDeck() {
+      let deck = [];
+      for (let suit of SUITS) {
+        for (let val of VALUES) deck.push({ suit, value: val });
+      }
+      return deck.sort(() => Math.random() - 0.5);
+    }
+
+    function calculateHand(hand) {
+      let score = 0, aces = 0;
+      for (let card of hand) {
+        if (card.value === 'A') { aces++; score += 11; }
+        else if (['K', 'Q', 'J'].includes(card.value)) score += 10;
+        else score += parseInt(card.value);
+      }
+      while (score > 21 && aces > 0) { score -= 10; aces--; }
+      return score;
+    }
+
+    function addBet(amount) {
+      if (state.gameState !== 'BETTING') return;
+      if (state.balance >= amount) {
+        state.balance -= amount;
+        state.currentBet += amount;
+        updateUI();
+      }
+    }
+
+    function clearBet() {
+      if (state.gameState !== 'BETTING') return;
+      state.balance += state.currentBet;
+      state.currentBet = 0;
+      updateUI();
+    }
+
+    function startRound() {
+      if (state.currentBet <= 0 || state.gameState !== 'BETTING') return;
+      state.deck = createDeck();
+      state.playerHand = [state.deck.pop(), state.deck.pop()];
+      state.dealerHand = [state.deck.pop(), state.deck.pop()];
+      state.gameState = 'PLAYING';
+      renderCards();
+      updateUI();
+
+      if (calculateHand(state.playerHand) === 21) resolveRound();
+    }
+
+    function playerHit() {
+      if (state.gameState !== 'PLAYING') return;
+      state.playerHand.push(state.deck.pop());
+      renderCards();
+      if (calculateHand(state.playerHand) >= 21) resolveRound();
+      else updateUI();
+    }
+
+    function playerStand() {
+      if (state.gameState !== 'PLAYING') return;
+      resolveRound();
+    }
+
+    function playerDouble() {
+      if (state.gameState !== 'PLAYING' || state.playerHand.length !== 2) return;
+      if (state.balance >= state.currentBet) {
+        state.balance -= state.currentBet;
+        state.currentBet *= 2;
+        state.playerHand.push(state.deck.pop());
+        renderCards();
+        resolveRound();
+      }
+    }
+
+    function resolveRound() {
+      state.gameState = 'RESOLVED';
+      let pScore = calculateHand(state.playerHand);
+
+      if (pScore <= 21) {
+        while (calculateHand(state.dealerHand) < 17) {
+          state.dealerHand.push(state.deck.pop());
+        }
+      }
+
+      let dScore = calculateHand(state.dealerHand);
+      let title = "";
+
+      if (pScore > 21) title = "PLAYER BUST!";
+      else if (dScore > 21) { title = "DEALER BUST! YOU WIN"; state.balance += state.currentBet * 2; }
+      else if (pScore === 21 && state.playerHand.length === 2 && !(dScore === 21 && state.dealerHand.length === 2)) {
+        title = "BLACKJACK!"; state.balance += state.currentBet * 2.5;
+      }
+      else if (pScore > dScore) { title = "YOU WIN!"; state.balance += state.currentBet * 2; }
+      else if (dScore > pScore) title = "DEALER WINS";
+      else { title = "PUSH (SERI)"; state.balance += state.currentBet; }
+
+      renderCards(true);
+      document.getElementById('bannerTitle').innerText = title;
+      document.getElementById('gameBanner').classList.remove('hidden');
+      updateUI();
+    }
+
+    function resetToBetting() {
+      state.currentBet = 0;
+      state.playerHand = [];
+      state.dealerHand = [];
+      state.gameState = 'BETTING';
+      document.getElementById('gameBanner').classList.add('hidden');
+      renderCards();
+      updateUI();
+    }
+
+    function renderCards(revealDealer = false) {
+      const pContainer = document.getElementById('playerCards');
+      const dContainer = document.getElementById('dealerCards');
+      pContainer.innerHTML = ''; dContainer.innerHTML = '';
+
+      state.playerHand.forEach(c => pContainer.appendChild(createCard(c)));
+      state.dealerHand.forEach((c, i) => {
+        if (i === 1 && state.gameState === 'PLAYING' && !revealDealer) {
+          dContainer.appendChild(createCard(c, true));
+        } else {
+          dContainer.appendChild(createCard(c));
+        }
+      });
+
+      document.getElementById('playerScore').innerText = calculateHand(state.playerHand);
+      document.getElementById('dealerScore').innerText = (state.gameState === 'PLAYING' && !revealDealer) ? '?' : calculateHand(state.dealerHand);
+    }
+
+    function createCard(card, isHidden = false) {
+      const div = document.createElement('div');
+      if (isHidden) {
+        div.className = "card card-back";
+      } else {
+        const isRed = ['♥', '♦'].includes(card.suit);
+        div.className = `card ${isRed ? 'red' : ''}`;
+        div.innerHTML = `<div>${card.value}</div><div>${card.suit}</div>`;
+      }
+      return div;
+    }
+
+    function updateUI() {
+      document.getElementById('chipBalance').innerText = state.balance.toLocaleString();
+      document.getElementById('currentBetDisplay').innerText = state.currentBet.toLocaleString();
+
+      const isBetting = state.gameState === 'BETTING';
+      const isPlaying = state.gameState === 'PLAYING';
+      const isResolved = state.gameState === 'RESOLVED';
+
+      document.getElementById('chipSelectorBar').style.display = isBetting ? 'flex' : 'none';
+      document.getElementById('btnClear').style.display = isBetting ? 'block' : 'none';
+      document.getElementById('btnDeal').style.display = isBetting ? 'block' : 'none';
+
+      document.getElementById('btnHit').style.display = isPlaying ? 'block' : 'none';
+      document.getElementById('btnStand').style.display = isPlaying ? 'block' : 'none';
+      document.getElementById('btnDouble').style.display = (isPlaying && state.playerHand.length === 2 && state.balance >= state.currentBet) ? 'block' : 'none';
+
+      document.getElementById('btnNewRound').style.display = isResolved ? 'block' : 'none';
+    }
+  </script>
+</body>
+</html>
