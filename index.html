@@ -2,122 +2,362 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ROYAL 21</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    body { background: #050b07; color: #e2e8f0; font-family: system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; overflow: hidden; }
-    header { background: #09090b; border-bottom: 1px solid #78350f; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; }
-    .gold-text { color: #facc15; font-weight: bold; font-size: 16px; letter-spacing: 1px; }
-    .balance-box { background: #18181b; border: 1px solid #ca8a04; padding: 4px 12px; border-radius: 20px; color: #fde047; font-weight: bold; font-size: 14px; }
-    
-    main { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
-    .screen { flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 16px; }
-    .hidden { display: none !important; }
-    
-    /* Table Styling */
-    .felt-table { background: radial-gradient(circle, #185235 0%, #0f3823 70%, #07190f 100%); position: relative; }
-    .card-area { display: flex; justify-content: center; min-height: 85px; margin: 8px 0; gap: 4px; }
-    .card { width: 50px; h: 75px; background: #fff; border-radius: 6px; border: 1px solid #ccc; color: #111; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; font-weight: bold; font-size: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-    .card.red { color: #dc2626; }
-    .card-back { background: #1e1b4b; border: 1px solid #ca8a04; }
-    
-    .bet-spot { width: 70px; height: 70px; border: 2px dashed #facc15; border-radius: 50%; margin: 10px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); }
-    .bet-amount { color: #fde047; font-weight: bold; font-size: 14px; }
-    
-    .chip-bar { display: flex; justify-content: center; gap: 8px; margin: 8px 0; }
-    .chip { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #fff; color: #fff; font-weight: bold; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .chip-5 { background: #b91c1c; }
-    .chip-25 { background: #047857; }
-    .chip-100 { background: #18181b; border-color: #facc15; color: #facc15; }
-    
-    .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-    button.btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; color: #fff; }
-    .btn-gold { background: linear-gradient(135deg, #d97706, #facc15); color: #000; grid-column: span 3; }
-    .btn-clear { background: #27272a; color: #a1a1aa; }
-    .btn-hit { background: #16a34a; }
-    .btn-stand { background: #dc2626; }
-    .btn-double { background: #d97706; color: #000; }
-    .btn-full { grid-column: span 4; }
-
-    nav { background: #09090b; border-top: 1px solid #78350f; display: flex; justify-content: space-around; padding: 10px 0; }
-    nav button { background: none; border: none; color: #71717a; font-size: 11px; font-weight: bold; cursor: pointer; }
-    nav button.active { color: #facc15; }
-    
-    .banner { background: #09090b; border: 1px solid #facc15; text-align: center; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
-  </style>
-</head>
-<body>
-
-  <header>
-    <div>
-      <div class="gold-text">ROYAL 21</div>
-      <div style="font-size: 10px; color: #a1a1aa;">LVL 1</div>
-    </div>
-    <div class="balance-box">🪙 <span id="chipBalance">1,000</span></div>
-  </header>
-
-  <main>
-    <!-- HOME SCREEN -->
-    <section id="screenHome" class="screen">
-      <div style="text-align: center; margin: auto 0;">
-        <h2 class="gold-text" style="font-size: 24px; margin-bottom: 8px;">ROYAL LOUNGE</h2>
-        <p style="font-size: 12px; color: #a1a1aa; margin-bottom: 20px;">Blackjack 21 Mobile Casino</p>
-        <button onclick="switchTab('play')" class="btn btn-gold btn-full" style="padding: 16px; font-size: 14px;">MAIN SEKARANG</button>
-      </div>
-    </section>
-
-    <!-- GAME TABLE SCREEN -->
-    <section id="screenPlay" class="screen felt-table hidden">
-      <!-- Dealer Area -->
-      <div style="text-align: center;">
-        <div style="font-size: 11px; color: #fde047; font-weight: bold;">DEALER (<span id="dealerScore">0</span>)</div>
-        <div id="dealerCards" class="card-area"></div>
-      </div>
-
-      <!-- Center Area -->
-      <div>
-        <div id="gameBanner" class="banner hidden">
-          <div id="bannerTitle" class="gold-text">BLACKJACK!</div>
-        </div>
-        <div class="bet-spot">
-          <span style="font-size: 9px; color: #aaa;">TARUHAN</span>
-          <span id="currentBetDisplay" class="bet-amount">0</span>
-        </div>
-      </div>
-
-      <!-- Player Area -->
-      <div>
-        <div style="text-align: center; font-size: 11px; color: #fde047; font-weight: bold;">PEMAIN (<span id="playerScore">0</span>)</div>
-        <div id="playerCards" class="card-area"></div>
-
-        <!-- Chips Selector -->
-        <div id="chipSelectorBar" class="chip-bar">
-          <div onclick="addBet(5)" class="chip chip-5">5</div>
-          <div onclick="addBet(25)" class="chip chip-25">25</div>
-          <div onclick="addBet(100)" class="chip chip-100">100</div>
-        </div>
-
-        <!-- Action Controls -->
-        <div class="btn-grid">
-          <button id="btnClear" onclick="clearBet()" class="btn btn-clear">CLEAR</button>
-          <button id="btnDeal" onclick="startRound()" class="btn btn-gold">DEAL</button>
-          
-          <button id="btnHit" onclick="playerHit()" class="btn btn-hit hidden">HIT</button>
-          <button id="btnStand" onclick="playerStand()" class="btn btn-stand hidden">STAND</button>
-          <button id="btnDouble" onclick="playerDouble()" class="btn btn-double hidden">DOUBLE</button>
-          <button id="btnNewRound" onclick="resetToBetting()" class="btn btn-gold btn-full hidden">RONDE BARU</button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <nav>
-    <button id="navHome" onclick="switchTab('home')" class="active">Lobby</button>
-    <button id="navPlay" onclick="switchTab('play')">Meja</button>
-  </nav>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ROYAL 21 — Premium Mobile Blackjack</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Font Integration -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: {
+              300: '#fde047',
+              400: '#facc15',
+              500: '#eab308',
+              600: '#ca8a04',
+              700: '#a16207',
+            },
+            felt: {
+              DEFAULT: '#0f3823',
+              dark: '#082114',
+              light: '#185235',
+            }
+          },
+          fontFamily: {
+            display: ['Cinzel', 'serif'],
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Styling Dasar & CSS Variables */
+    :root {
+      --gold-gradient: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+      --felt-gradient: radial-gradient(circle at center, #185235 0%, #0f3823 60%, #07190f 100%);
+    }
+
+    body {
+      background-color: #050b07;
+      color: #e2e8f0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+      height: 100vh;
+      height: -webkit-fill-available;
+    }
+
+    .gold-text {
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gold-border {
+      border-image: var(--gold-gradient) 1;
+    }
+
+    /* Animasi 3D Kartu */
+    .card-container {
+      perspective: 1000px;
+    }
+
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .card-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .card-back {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border: 2px solid #ca8a04;
+      transform: rotateY(180deg);
+    }
+
+    /* Transition & Keyframes */
+    @keyframes dealCard {
+      0% {
+        opacity: 0;
+        transform: translateY(-200px) scale(0.5) rotate(-10deg);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+      }
+    }
+
+    .animate-deal {
+      animation: dealCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.05); }
+    }
+
+    .animate-pulse-glow {
+      animation: pulseGlow 3s infinite ease-in-out;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #082114;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #ca8a04;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body class="flex flex-col h-screen max-w-md mx-auto relative border-x border-amber-900/20 shadow-2xl bg-black">
+
+  <!-- TOP HEADER / APP BAR -->
+  <header class="bg-stone-950/90 border-b border-amber-500/20 px-4 py-2.5 flex items-center justify-between z-20 backdrop-blur-md">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-600 to-yellow-300 p-0.5 shadow-md">
+        <div class="w-full h-full bg-stone-900 rounded-full flex items-center justify-center">
+          <i data-lucide="crown" class="w-4 h-4 text-amber-400"></i>
+        </div>
+      </div>
+      <div>
+        <h1 class="font-display font-bold text-sm tracking-wider gold-text leading-tight">ROYAL 21</h1>
+        <div class="flex items-center space-x-1 text-[10px] text-amber-200/60">
+          <span>LVL <span id="playerLvl">1</span></span>
+          <div class="w-8 bg-stone-800 h-1 rounded-full overflow-hidden">
+            <div id="xpBar" class="bg-amber-400 h-full w-1/3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BALANCE DISPLAY -->
+    <div class="flex items-center bg-stone-900/90 border border-amber-500/30 rounded-full px-3 py-1 shadow-inner">
+      <i data-lucide="coins" class="w-4 h-4 text-amber-400 mr-1.5 animate-pulse"></i>
+      <span id="chipBalance" class="font-bold text-amber-300 text-sm tracking-wide">1,000</span>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER (SCREEN ROUTER) -->
+  <main id="appContainer" class="flex-1 relative overflow-hidden flex flex-col">
+
+    <!-- 1. HOME SCREEN -->
+    <section id="screenHome" class="flex-1 flex flex-col justify-between p-5 relative z-10 overflow-y-auto">
+      <!-- Background Decorative Ambient -->
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-900/10 via-transparent to-transparent pointer-events-none"></div>
+
+      <!-- Welcome Hero -->
+      <div class="text-center my-auto py-6">
+        <div class="inline-flex p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4 animate-bounce">
+          <i data-lucide="spade" class="w-12 h-12 text-amber-400"></i>
+        </div>
+        <h2 class="font-display text-3xl font-bold gold-text mb-2">ROYAL LOUNGE</h2>
+        <p class="text-xs text-stone-400 max-w-xs mx-auto mb-6">Pengalaman Kasino VIP Eksklusif. Rasakan Sensasi Blackjack 21 Tanpa Risiko.</p>
+        
+        <button onclick="switchTab('play')" class="w-full py-4 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 text-stone-950 font-bold font-display rounded-xl shadow-lg shadow-amber-600/30 active:scale-95 transition-all duration-150 flex items-center justify-center space-x-2 text-base tracking-wider">
+          <i data-lucide="play" class="w-5 h-5 fill-current"></i>
+          <span>MAIN SEKARANG</span>
+        </button>
+      </div>
+
+      <!-- Quick Cards Section -->
+      <div class="grid grid-cols-2 gap-3 mb-2">
+        <div onclick="claimDailyReward()" class="bg-stone-900/80 border border-amber-500/20 rounded-xl p-3 text-left relative overflow-hidden group cursor-pointer active:scale-95 transition">
+          <div class="flex items-center justify-between mb-2">
+            <i data-lucide="gift" class="w-5 h-5 text-amber-400"></i>
+            <span id="dailyStatus" class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">KLAIM</span>
+          </div>
+          <p class="text-xs font-bold text-stone-200">Bonus Harian</p>
+          <p class="text-[10px] text-stone-400">+500 Virtual Chips</p>
+        </div>
+
+        <div onclick="switchTab('stats')" class="bg-stone-900/80 border border-amber-500/20 rounded-xl p-3 text-left relative overflow-hidden group cursor-pointer active:scale-95 transition">
+          <div class="flex items-center justify-between mb-2">
+            <i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i>
+            <span class="text-[9px] bg-stone-800 text-stone-400 px-1.5 py-0.5 rounded">VIP</span>
+          </div>
+          <p class="text-xs font-bold text-stone-200">Statistik</p>
+          <p class="text-[10px] text-stone-400">Winrate & Rekor</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. GAME TABLE SCREEN -->
+    <section id="screenPlay" class="hidden flex-1 flex-col justify-between relative bg-felt">
+      <!-- Felt Texture Layer -->
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-felt-light via-felt to-felt-dark opacity-90"></div>
+      
+      <!-- Table Outline Border -->
+      <div class="absolute inset-2 border-2 border-amber-500/20 rounded-[40px] pointer-events-none"></div>
+
+      <!-- TOP: DEALER AREA -->
+      <div class="relative z-10 pt-4 px-4 flex flex-col items-center">
+        <!-- Dealer Avatar & Status -->
+        <div class="flex items-center space-x-2 mb-2">
+          <div class="w-10 h-10 rounded-full border-2 border-amber-400/80 overflow-hidden bg-stone-900 shadow-md">
+            <div id="dealerAvatar" class="w-full h-full flex items-center justify-center bg-stone-800 text-amber-300 font-display font-bold text-xs">VIP</div>
+          </div>
+          <div>
+            <div class="text-[11px] font-bold text-amber-200/80 tracking-wider">DEALER</div>
+            <div id="dealerStatus" class="text-[9px] text-stone-300/70">Stands on Soft 17</div>
+          </div>
+        </div>
+
+        <!-- Dealer Cards Container -->
+        <div id="dealerCards" class="flex justify-center -space-x-8 min-h-[96px] items-center my-1">
+          <!-- Dynamically Injected Cards -->
+        </div>
+        
+        <!-- Dealer Score -->
+        <div id="dealerScoreBadge" class="hidden bg-stone-900/80 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-xs font-bold text-amber-300 shadow">
+          0
+        </div>
+      </div>
+
+      <!-- CENTER: ANNOUNCEMENT & BET SPOT -->
+      <div class="relative z-10 flex flex-col items-center justify-center my-auto">
+        <!-- Game Banner Announcement -->
+        <div id="gameBanner" class="hidden transform transition-all duration-300 text-center px-4 py-2 rounded-xl bg-stone-950/90 border border-amber-400/50 shadow-2xl backdrop-blur-md mb-2">
+          <h3 id="bannerTitle" class="font-display text-lg font-bold gold-text">BLACKJACK!</h3>
+          <p id="bannerSubtitle" class="text-[10px] text-stone-300">Menang 3:2 Payout</p>
+        </div>
+
+        <!-- Betting Spot Circle -->
+        <div id="betSpot" class="w-20 h-20 rounded-full border-2 border-dashed border-amber-400/40 flex flex-col items-center justify-center relative bg-stone-950/30 backdrop-blur-sm shadow-inner transition-all duration-300">
+          <span class="text-[9px] text-amber-200/50 uppercase tracking-widest font-bold">Taruhan</span>
+          <span id="currentBetDisplay" class="text-sm font-bold text-amber-300">0</span>
+        </div>
+      </div>
+
+      <!-- BOTTOM: PLAYER AREA -->
+      <div class="relative z-10 pb-3 px-4 flex flex-col items-center">
+        <!-- Player Score -->
+        <div id="playerScoreBadge" class="hidden bg-stone-900/80 border border-amber-500/30 px-2.5 py-0.5 rounded-full text-xs font-bold text-amber-300 shadow mb-1">
+          0
+        </div>
+
+        <!-- Player Cards Container -->
+        <div id="playerCards" class="flex justify-center -space-x-8 min-h-[96px] items-center mb-3">
+          <!-- Dynamically Injected Cards -->
+        </div>
+
+        <!-- CHIP SELECTOR BAR (Betting Phase) -->
+        <div id="chipSelectorBar" class="w-full flex justify-center items-center space-x-2 my-2">
+          <button onclick="addBet(5)" class="w-10 h-10 rounded-full bg-red-700 border-2 border-dashed border-white/80 font-bold text-[10px] text-white shadow-lg active:scale-90 transition">5</button>
+          <button onclick="addBet(10)" class="w-10 h-10 rounded-full bg-blue-700 border-2 border-dashed border-white/80 font-bold text-[10px] text-white shadow-lg active:scale-90 transition">10</button>
+          <button onclick="addBet(25)" class="w-10 h-10 rounded-full bg-emerald-700 border-2 border-dashed border-white/80 font-bold text-[10px] text-white shadow-lg active:scale-90 transition">25</button>
+          <button onclick="addBet(50)" class="w-10 h-10 rounded-full bg-amber-600 border-2 border-dashed border-white/80 font-bold text-[10px] text-white shadow-lg active:scale-90 transition">50</button>
+          <button onclick="addBet(100)" class="w-10 h-10 rounded-full bg-stone-900 border-2 border-dashed border-amber-400 font-bold text-[10px] text-amber-300 shadow-lg active:scale-90 transition">100</button>
+        </div>
+
+        <!-- GAME CONTROLS / ACTION BUTTONS -->
+        <div id="actionControls" class="w-full grid grid-cols-4 gap-2 mt-1">
+          <!-- Betting Controls -->
+          <button id="btnClear" onclick="clearBet()" class="py-2.5 bg-stone-800 text-stone-300 rounded-lg text-xs font-bold border border-stone-700 active:scale-95 transition">CLEAR</button>
+          <button id="btnDeal" onclick="startRound()" class="col-span-3 py-2.5 bg-gradient-to-r from-amber-600 to-yellow-500 text-stone-950 rounded-lg text-xs font-bold font-display tracking-wider shadow-lg active:scale-95 transition">DEAL</button>
+          
+          <!-- Gameplay Controls (Hidden by default) -->
+          <button id="btnHit" onclick="playerHit()" class="hidden py-3 bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-lg active:scale-95 transition">HIT</button>
+          <button id="btnStand" onclick="playerStand()" class="hidden py-3 bg-red-600 text-white rounded-lg text-xs font-bold shadow-lg active:scale-95 transition">STAND</button>
+          <button id="btnDouble" onclick="playerDouble()" class="hidden py-3 bg-amber-600 text-stone-950 rounded-lg text-xs font-bold shadow-lg active:scale-95 transition">DOUBLE</button>
+          <button id="btnNewRound" onclick="resetToBetting()" class="hidden col-span-4 py-3 bg-gradient-to-r from-amber-600 to-yellow-500 text-stone-950 rounded-lg text-xs font-bold font-display tracking-wider shadow-lg active:scale-95 transition">RONDE BARU</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. STATISTICS SCREEN -->
+    <section id="screenStats" class="hidden flex-1 p-5 overflow-y-auto">
+      <h2 class="font-display text-xl font-bold gold-text mb-4">STATISTIK PERMAINAN</h2>
+
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-stone-900 border border-amber-500/20 p-3 rounded-xl">
+          <p class="text-[10px] text-stone-400 uppercase">Total Game</p>
+          <p id="statTotalGames" class="text-lg font-bold text-stone-100">0</p>
+        </div>
+        <div class="bg-stone-900 border border-amber-500/20 p-3 rounded-xl">
+          <p class="text-[10px] text-stone-400 uppercase">Win Rate</p>
+          <p id="statWinRate" class="text-lg font-bold text-amber-400">0%</p>
+        </div>
+        <div class="bg-stone-900 border border-amber-500/20 p-3 rounded-xl">
+          <p class="text-[10px] text-stone-400 uppercase">Menang</p>
+          <p id="statWins" class="text-lg font-bold text-emerald-400">0</p>
+        </div>
+        <div class="bg-stone-900 border border-amber-500/20 p-3 rounded-xl">
+          <p class="text-[10px] text-stone-400 uppercase">Blackjack Natural</p>
+          <p id="statBlackjacks" class="text-lg font-bold text-yellow-400">0</p>
+        </div>
+      </div>
+
+      <div class="bg-stone-900 border border-amber-500/20 p-4 rounded-xl mb-4">
+        <h3 class="text-xs font-bold text-stone-300 mb-2">Aturan Kasino ROYAL 21</h3>
+        <ul class="text-[11px] text-stone-400 space-y-1 list-disc list-inside">
+          <li>Blackjack Natural membayar 3:2</li>
+          <li>Dealer melayani hingga total 17 (Stand soft 17)</li>
+          <li>Double Down melipatgandakan taruhan untuk 1 kartu tambahan</li>
+          <li>Menggunakan 1 Deck 52 Kartu Standar</li>
+        </ul>
+      </div>
+
+      <button onclick="confirmResetData()" class="w-full py-2.5 bg-red-950/40 border border-red-500/30 text-red-400 text-xs rounded-xl font-bold active:scale-95 transition">
+        Reset Seluruh Progres
+      </button>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="bg-stone-950 border-t border-amber-500/20 px-6 py-2 flex justify-around items-center z-20">
+    <button onclick="switchTab('home')" id="navHome" class="flex flex-col items-center text-amber-400 transition">
+      <i data-lucide="home" class="w-5 h-5"></i>
+      <span class="text-[9px] mt-1 font-medium">Lobby</span>
+    </button>
+    <button onclick="switchTab('play')" id="navPlay" class="flex flex-col items-center text-stone-500 hover:text-amber-400 transition">
+      <i data-lucide="gamepad-2" class="w-5 h-5"></i>
+      <span class="text-[9px] mt-1 font-medium">Meja</span>
+    </button>
+    <button onclick="switchTab('stats')" id="navStats" class="flex flex-col items-center text-stone-500 hover:text-amber-400 transition">
+      <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+      <span class="text-[9px] mt-1 font-medium">Statistik</span>
+    </button>
+  </nav>
+
+  <!-- JAVASCRIPT GAME ENGINE -->
+  <script>
+    /* ==========================================================================
+       STATE MANAGEMENT & ENGINE BLACKJACK
+       ========================================================================== */
+
     const SUITS = ['♠', '♥', '♦', '♣'];
     const VALUES = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
@@ -127,48 +367,152 @@
       deck: [],
       playerHand: [],
       dealerHand: [],
-      gameState: 'BETTING'
+      gameState: 'BETTING', // BETTING, PLAYING, RESOLVED
+      stats: {
+        totalGames: 0,
+        wins: 0,
+        losses: 0,
+        pushes: 0,
+        blackjacks: 0,
+      },
+      lastDailyClaim: null
     };
 
+    // Audio Synthetic Engine (Web Audio API)
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      },
+      playChip() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+      },
+      playCard() {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      }
+    };
+
+    // Inisialisasi Aplikasi
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadStorage();
+      updateUI();
+    });
+
+    // Save & Load LocalStorage
+    function saveStorage() {
+      localStorage.setItem('ROYAL21_STATE', JSON.stringify(state));
+    }
+
+    function loadStorage() {
+      const saved = localStorage.getItem('ROYAL21_STATE');
+      if (saved) {
+        try {
+          state = { ...state, ...JSON.parse(saved) };
+        } catch (e) {
+          console.error('Error loading state', e);
+        }
+      }
+    }
+
+    // Navigation System
     function switchTab(tab) {
       document.getElementById('screenHome').classList.add('hidden');
       document.getElementById('screenPlay').classList.add('hidden');
-      document.getElementById('navHome').classList.remove('active');
-      document.getElementById('navPlay').classList.remove('active');
+      document.getElementById('screenStats').classList.add('hidden');
+
+      document.getElementById('navHome').className = "flex flex-col items-center text-stone-500 hover:text-amber-400 transition";
+      document.getElementById('navPlay').className = "flex flex-col items-center text-stone-500 hover:text-amber-400 transition";
+      document.getElementById('navStats').className = "flex flex-col items-center text-stone-500 hover:text-amber-400 transition";
 
       if (tab === 'home') {
         document.getElementById('screenHome').classList.remove('hidden');
-        document.getElementById('navHome').classList.add('active');
-      } else {
+        document.getElementById('navHome').className = "flex flex-col items-center text-amber-400 transition";
+      } else if (tab === 'play') {
         document.getElementById('screenPlay').classList.remove('hidden');
-        document.getElementById('navPlay').classList.add('active');
+        document.getElementById('screenPlay').classList.add('flex');
+        document.getElementById('navPlay').className = "flex flex-col items-center text-amber-400 transition";
+      } else if (tab === 'stats') {
+        document.getElementById('screenStats').classList.remove('hidden');
+        document.getElementById('navStats').className = "flex flex-col items-center text-amber-400 transition";
+        renderStats();
       }
     }
+
+    /* ==========================================================================
+       LOGIKA GAME BLACKJACK
+       ========================================================================== */
 
     function createDeck() {
       let deck = [];
       for (let suit of SUITS) {
-        for (let val of VALUES) deck.push({ suit, value: val });
+        for (let val of VALUES) {
+          deck.push({ suit, value: val });
+        }
       }
-      return deck.sort(() => Math.random() - 0.5);
+      // Shuffle Fisher-Yates
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      return deck;
     }
 
     function calculateHand(hand) {
-      let score = 0, aces = 0;
+      let score = 0;
+      let aces = 0;
+
       for (let card of hand) {
-        if (card.value === 'A') { aces++; score += 11; }
-        else if (['K', 'Q', 'J'].includes(card.value)) score += 10;
-        else score += parseInt(card.value);
+        if (card.value === 'A') {
+          aces += 1;
+          score += 11;
+        } else if (['K', 'Q', 'J'].includes(card.value)) {
+          score += 10;
+        } else {
+          score += parseInt(card.value);
+        }
       }
-      while (score > 21 && aces > 0) { score -= 10; aces--; }
+
+      while (score > 21 && aces > 0) {
+        score -= 10;
+        aces -= 1;
+      }
+
       return score;
     }
 
+    // Betting Actions
     function addBet(amount) {
       if (state.gameState !== 'BETTING') return;
       if (state.balance >= amount) {
         state.balance -= amount;
         state.currentBet += amount;
+        AudioEngine.playChip();
         updateUI();
       }
     }
@@ -177,27 +521,45 @@
       if (state.gameState !== 'BETTING') return;
       state.balance += state.currentBet;
       state.currentBet = 0;
+      AudioEngine.playChip();
       updateUI();
     }
 
+    // Start Round / Deal Cards
     function startRound() {
       if (state.currentBet <= 0 || state.gameState !== 'BETTING') return;
+
       state.deck = createDeck();
       state.playerHand = [state.deck.pop(), state.deck.pop()];
       state.dealerHand = [state.deck.pop(), state.deck.pop()];
       state.gameState = 'PLAYING';
+      state.stats.totalGames++;
+
+      AudioEngine.playCard();
       renderCards();
       updateUI();
 
-      if (calculateHand(state.playerHand) === 21) resolveRound();
+      // Check Natural Blackjack
+      const pScore = calculateHand(state.playerHand);
+      if (pScore === 21) {
+        state.stats.blackjacks++;
+        resolveRound();
+      }
     }
 
+    // Player Actions
     function playerHit() {
       if (state.gameState !== 'PLAYING') return;
+
       state.playerHand.push(state.deck.pop());
+      AudioEngine.playCard();
       renderCards();
-      if (calculateHand(state.playerHand) >= 21) resolveRound();
-      else updateUI();
+
+      if (calculateHand(state.playerHand) >= 21) {
+        resolveRound();
+      } else {
+        updateUI();
+      }
     }
 
     function playerStand() {
@@ -211,15 +573,19 @@
         state.balance -= state.currentBet;
         state.currentBet *= 2;
         state.playerHand.push(state.deck.pop());
+        AudioEngine.playCard();
         renderCards();
         resolveRound();
       }
     }
 
+    // Dealer AI & Resolution
     function resolveRound() {
       state.gameState = 'RESOLVED';
+
       let pScore = calculateHand(state.playerHand);
 
+      // Dealer draws if player hasn't busted
       if (pScore <= 21) {
         while (calculateHand(state.dealerHand) < 17) {
           state.dealerHand.push(state.deck.pop());
@@ -227,20 +593,43 @@
       }
 
       let dScore = calculateHand(state.dealerHand);
-      let title = "";
+      let bannerTitle = "";
+      let bannerSubtitle = "";
 
-      if (pScore > 21) title = "PLAYER BUST!";
-      else if (dScore > 21) { title = "DEALER BUST! YOU WIN"; state.balance += state.currentBet * 2; }
-      else if (pScore === 21 && state.playerHand.length === 2 && !(dScore === 21 && state.dealerHand.length === 2)) {
-        title = "BLACKJACK!"; state.balance += state.currentBet * 2.5;
+      // Determine Winner
+      if (pScore > 21) {
+        bannerTitle = "PLAYER BUST!";
+        bannerSubtitle = "Anda melebihi 21";
+        state.stats.losses++;
+      } else if (dScore > 21) {
+        bannerTitle = "DEALER BUST!";
+        bannerSubtitle = "Anda Menang 1:1";
+        state.balance += state.currentBet * 2;
+        state.stats.wins++;
+      } else if (pScore === 21 && state.playerHand.length === 2 && !(dScore === 21 && state.dealerHand.length === 2)) {
+        bannerTitle = "BLACKJACK!";
+        bannerSubtitle = "Payout Natural 3:2";
+        state.balance += state.currentBet * 2.5;
+        state.stats.wins++;
+      } else if (pScore > dScore) {
+        bannerTitle = "YOU WIN!";
+        bannerSubtitle = "Nilai Anda Lebih Tinggi";
+        state.balance += state.currentBet * 2;
+        state.stats.wins++;
+      } else if (dScore > pScore) {
+        bannerTitle = "DEALER WINS";
+        bannerSubtitle = "Dealer Memiliki Tangan Lebih Baik";
+        state.stats.losses++;
+      } else {
+        bannerTitle = "PUSH (SERI)";
+        bannerSubtitle = "Taruhan Dikembalikan";
+        state.balance += state.currentBet;
+        state.stats.pushes++;
       }
-      else if (pScore > dScore) { title = "YOU WIN!"; state.balance += state.currentBet * 2; }
-      else if (dScore > pScore) title = "DEALER WINS";
-      else { title = "PUSH (SERI)"; state.balance += state.currentBet; }
 
-      renderCards(true);
-      document.getElementById('bannerTitle').innerText = title;
-      document.getElementById('gameBanner').classList.remove('hidden');
+      renderCards(true); // Show hidden dealer card
+      showBanner(bannerTitle, bannerSubtitle);
+      saveStorage();
       updateUI();
     }
 
@@ -249,39 +638,96 @@
       state.playerHand = [];
       state.dealerHand = [];
       state.gameState = 'BETTING';
+
       document.getElementById('gameBanner').classList.add('hidden');
       renderCards();
       updateUI();
     }
 
+    /* ==========================================================================
+       UI RENDERERS & HELPERS
+       ========================================================================== */
+
     function renderCards(revealDealer = false) {
       const pContainer = document.getElementById('playerCards');
       const dContainer = document.getElementById('dealerCards');
-      pContainer.innerHTML = ''; dContainer.innerHTML = '';
 
-      state.playerHand.forEach(c => pContainer.appendChild(createCard(c)));
-      state.dealerHand.forEach((c, i) => {
-        if (i === 1 && state.gameState === 'PLAYING' && !revealDealer) {
-          dContainer.appendChild(createCard(c, true));
+      pContainer.innerHTML = '';
+      dContainer.innerHTML = '';
+
+      // Player Cards
+      state.playerHand.forEach(card => {
+        pContainer.appendChild(createCardElement(card));
+      });
+
+      // Dealer Cards
+      state.dealerHand.forEach((card, index) => {
+        if (index === 1 && state.gameState === 'PLAYING' && !revealDealer) {
+          pContainer;
+          dContainer.appendChild(createCardElement(card, true)); // Hidden Card
         } else {
-          dContainer.appendChild(createCard(c));
+          dContainer.appendChild(createCardElement(card));
         }
       });
 
-      document.getElementById('playerScore').innerText = calculateHand(state.playerHand);
-      document.getElementById('dealerScore').innerText = (state.gameState === 'PLAYING' && !revealDealer) ? '?' : calculateHand(state.dealerHand);
+      // Badges Score
+      const pBadge = document.getElementById('playerScoreBadge');
+      const dBadge = document.getElementById('dealerScoreBadge');
+
+      if (state.playerHand.length > 0) {
+        pBadge.classList.remove('hidden');
+        pBadge.innerText = calculateHand(state.playerHand);
+      } else {
+        pBadge.classList.add('hidden');
+      }
+
+      if (state.dealerHand.length > 0) {
+        dBadge.classList.remove('hidden');
+        if (state.gameState === 'PLAYING' && !revealDealer) {
+          dBadge.innerText = '?';
+        } else {
+          dBadge.innerText = calculateHand(state.dealerHand);
+        }
+      } else {
+        dBadge.classList.add('hidden');
+      }
     }
 
-    function createCard(card, isHidden = false) {
+    function createCardElement(card, isHidden = false) {
       const div = document.createElement('div');
+      div.className = "w-14 h-20 card-container animate-deal";
+
       if (isHidden) {
-        div.className = "card card-back";
+        div.innerHTML = `
+          <div class="card-inner">
+            <div class="card-back rounded-lg flex items-center justify-center border border-amber-400">
+              <i data-lucide="crown" class="w-5 h-5 text-amber-400/60"></i>
+            </div>
+          </div>
+        `;
       } else {
         const isRed = ['♥', '♦'].includes(card.suit);
-        div.className = `card ${isRed ? 'red' : ''}`;
-        div.innerHTML = `<div>${card.value}</div><div>${card.suit}</div>`;
+        const colorClass = isRed ? 'text-red-600' : 'text-stone-900';
+
+        div.innerHTML = `
+          <div class="card-inner">
+            <div class="card-front bg-amber-50 border border-amber-200 rounded-lg p-1 flex flex-col justify-between shadow-md">
+              <div class="text-left font-bold text-xs leading-none ${colorClass}">${card.value}<br><span class="text-[10px]">${card.suit}</span></div>
+              <div class="text-center text-base ${colorClass}">${card.suit}</div>
+              <div class="text-right font-bold text-xs leading-none ${colorClass} rotate-180">${card.value}<br><span class="text-[10px]">${card.suit}</span></div>
+            </div>
+          </div>
+        `;
       }
+      setTimeout(() => lucide.createIcons(), 0);
       return div;
+    }
+
+    function showBanner(title, subtitle) {
+      const banner = document.getElementById('gameBanner');
+      document.getElementById('bannerTitle').innerText = title;
+      document.getElementById('bannerSubtitle').innerText = subtitle;
+      banner.classList.remove('hidden');
     }
 
     function updateUI() {
@@ -292,15 +738,63 @@
       const isPlaying = state.gameState === 'PLAYING';
       const isResolved = state.gameState === 'RESOLVED';
 
+      // Control Buttons Visibility
       document.getElementById('chipSelectorBar').style.display = isBetting ? 'flex' : 'none';
       document.getElementById('btnClear').style.display = isBetting ? 'block' : 'none';
       document.getElementById('btnDeal').style.display = isBetting ? 'block' : 'none';
 
       document.getElementById('btnHit').style.display = isPlaying ? 'block' : 'none';
       document.getElementById('btnStand').style.display = isPlaying ? 'block' : 'none';
-      document.getElementById('btnDouble').style.display = (isPlaying && state.playerHand.length === 2 && state.balance >= state.currentBet) ? 'block' : 'none';
+      
+      // Double down condition (Only initial 2 cards)
+      const canDouble = isPlaying && state.playerHand.length === 2 && state.balance >= state.currentBet;
+      document.getElementById('btnDouble').style.display = canDouble ? 'block' : 'none';
 
       document.getElementById('btnNewRound').style.display = isResolved ? 'block' : 'none';
+    }
+
+    function renderStats() {
+      const total = state.stats.totalGames;
+      const winrate = total > 0 ? Math.round((state.stats.wins / total) * 100) : 0;
+
+      document.getElementById('statTotalGames').innerText = total;
+      document.getElementById('statWinRate').innerText = winrate + '%';
+      document.getElementById('statWins').innerText = state.stats.wins;
+      document.getElementById('statBlackjacks').innerText = state.stats.blackjacks;
+    }
+
+    function claimDailyReward() {
+      const now = new Date().toDateString();
+      if (state.lastDailyClaim === now) {
+        alert('Bonus Harian sudah diklaim hari ini! Kembali lagi besok.');
+      } else {
+        state.balance += 500;
+        state.lastDailyClaim = now;
+        saveStorage();
+        updateUI();
+        document.getElementById('dailyStatus').innerText = 'KLAIMED';
+        document.getElementById('dailyStatus').className = 'text-[9px] bg-stone-800 text-stone-500 px-1.5 py-0.5 rounded';
+        alert('Selamat! Anda menerima +500 Chips Harian.');
+      }
+    }
+
+    function confirmResetData() {
+      if (confirm('Apakah Anda yakin ingin mereset seluruh saldo dan statistik?')) {
+        localStorage.removeItem('ROYAL21_STATE');
+        state = {
+          balance: 1000,
+          currentBet: 0,
+          deck: [],
+          playerHand: [],
+          dealerHand: [],
+          gameState: 'BETTING',
+          stats: { totalGames: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 },
+          lastDailyClaim: null
+        };
+        updateUI();
+        renderStats();
+        alert('Data berhasil di-reset.');
+      }
     }
   </script>
 </body>
