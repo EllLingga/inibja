@@ -131,6 +131,9 @@ input[type=range]{width:100%;accent-color:var(--ac);height:20px;background:none}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+#yt{position:fixed;left:12px;right:12px;bottom:calc(var(--nav) + var(--bar) + 10px + env(safe-area-inset-bottom));z-index:15;border-radius:16px;overflow:hidden;display:none;aspect-ratio:16/9;max-height:34vh;background:#000;box-shadow:0 10px 40px #0008}
+#yt.show{display:block;animation:in .3s}#yt iframe{width:100%;height:100%;display:block}
+@media(min-width:900px){#yt{left:auto;right:16px;width:380px;bottom:calc(var(--bar) + 24px)}}
 </style>
 <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 </head>
@@ -145,6 +148,8 @@ input[type=range]{width:100%;accent-color:var(--ac);height:20px;background:none}
 <main id="view"></main>
 
 <div id="spotify"><iframe id="sp-frame" title="Spotify" allow="encrypted-media" loading="lazy"></iframe></div>
+
+<div id="yt"><div id="yt-box"></div></div>
 
 <div id="bar" hidden>
   <img id="bar-art" alt=""><div class="meta"><b id="bar-title"></b><small id="bar-artist"></small></div>
@@ -218,6 +223,8 @@ function playSong(id, list) {
   qi = queue.indexOf(id); cur = s;
   S.recent = [id, ...S.recent.filter(x => x !== id)].slice(0, 20); save();
   const sp = $('#spotify');
+  if (s.src === 'youtube') { audio.pause(); spPlayer && spPlayer.pause(); spLive = false; $('#sp-frame').src = 'about:blank'; sp.classList.remove('show'); ytPlay(s); paint(); return; }
+  ytStop();
   if (s.src === 'spotify') {
     audio.pause();
     if (spReady() && s.spType === 'track') { sp.classList.remove('show'); $('#sp-frame').src = 'about:blank'; spPlay(s); }
@@ -232,6 +239,7 @@ function playSong(id, list) {
 }
 function step(d, auto) {
   if (!queue.length) return;
+  if (auto && repeat === 2 && cur && cur.src === 'youtube') { yt.seekTo(0); yt.playVideo(); return; }
   if (auto && repeat === 2) { audio.currentTime = 0; audio.play(); return; }
   let n = shuffle && queue.length > 1 ? Math.floor(Math.random() * queue.length) : qi + d;
   if (n >= queue.length) { if (repeat === 1 || !auto) n = 0; else return paint(); }
@@ -240,6 +248,7 @@ function step(d, auto) {
 }
 function toggle() {
   if (!cur) { const f = S.songs[0]; return f ? playSong(f.id, S.songs.map(x => x.id)) : toast('Library masih kosong'); }
+  if (cur.src === 'youtube') return ytLive && (ytPlaying ? yt.pauseVideo() : yt.playVideo());
   if (cur.src === 'spotify') return spLive ? spPlayer.togglePlay() : toast('Gunakan kontrol Spotify di pemutar tersemat');
   audio.paused ? audio.play() : audio.pause();
 }
@@ -253,18 +262,18 @@ audio.addEventListener('timeupdate', () => {
   if (!seeking) $('#seek').value = p;
 });
 let seeking = false;
-$('#seek').oninput = e => { seeking = true; if (!spLive && audio.duration) audio.currentTime = e.target.value / 100 * audio.duration; };
-$('#seek').onchange = () => { seeking = false; if (spLive) spPlayer.seek($('#seek').value / 100 * spDur); };
-$('#vol').oninput = e => { audio.volume = e.target.value; spPlayer && spPlayer.setVolume(+e.target.value); };
+$('#seek').oninput = e => { seeking = true; if (!spLive && !ytLive && audio.duration) audio.currentTime = e.target.value / 100 * audio.duration; };
+$('#seek').onchange = () => { seeking = false; if (spLive) spPlayer.seek($('#seek').value / 100 * spDur); else if (ytLive) yt.seekTo($('#seek').value / 100 * ytDur, true); };
+$('#vol').oninput = e => { audio.volume = e.target.value; spPlayer && spPlayer.setVolume(+e.target.value); yt && yt.setVolume && yt.setVolume(e.target.value * 100); };
 
 function paint() {
   const has = !!cur; document.body.classList.toggle('has-bar', has); $('#bar').hidden = !has;
   if (has) {
-    const playing = cur.src === 'spotify' ? (spLive ? spPlaying : true) : !audio.paused, fav = S.favs.includes(cur.id);
+    const playing = cur.src === 'youtube' ? ytPlaying : cur.src === 'spotify' ? (spLive ? spPlaying : true) : !audio.paused, fav = S.favs.includes(cur.id);
     $('#bar-art').src = $('#np-art').src = art(cur);
     $('#bar-title').textContent = $('#np-title').textContent = cur.title;
     $('#bar-artist').textContent = $('#np-artist').textContent = cur.artist;
-    $('#t-dur').textContent = cur.src === 'spotify' && !spLive ? '—' : fmt(spLive ? spDur / 1000 : (audio.duration || cur.dur));
+    $('#t-dur').textContent = cur.src === 'youtube' ? fmt(ytDur) : cur.src === 'spotify' && !spLive ? '—' : fmt(spLive ? spDur / 1000 : (audio.duration || cur.dur));
     $('#seek').disabled = cur.src === 'spotify' && !spLive;
     for (const b of ['#bar-play', '#c-play']) $(b).innerHTML = `<i data-lucide="${playing && (cur.src !== 'spotify' || spLive) ? 'pause' : 'play'}"></i>`;
     for (const b of ['#bar-fav', '#np-fav']) $(b).classList.toggle('fav', fav);
@@ -305,9 +314,11 @@ function parseSpotify(u) {
   return m ? { type: m[1], id: m[2] } : null;
 }
 function spotifyModal() {
-  openModal(`<h3>Import dari Spotify</h3><p>Tempel link track, album, atau playlist.</p><div class="field"><i data-lucide="link"></i><input id="sp-url" placeholder="https://open.spotify.com/track/..."></div><div class="err" id="sp-err"></div><div class="actions"><button class="btn" id="sp-go">Import</button><button class="btn ghost" data-close>Batal</button></div>`);
+  openModal(`<h3>Tambah lagu</h3><p>Tempel link YouTube (video atau playlist) untuk lagu penuh tanpa login. Link Spotify juga bisa. Ketik judul lalu Import untuk membuka pencarian YouTube.</p><div class="field"><i data-lucide="link"></i><input id="sp-url" placeholder="Link atau judul lagu"></div><div class="err" id="sp-err"></div><div class="actions"><button class="btn" id="sp-go">Import</button><button class="btn ghost" data-close>Batal</button></div>`);
   const go = async () => {
-    const p = parseSpotify($('#sp-url').value), err = $('#sp-err');
+    const raw = $('#sp-url').value.trim(), yp = parseYT(raw), p = yp ? null : parseSpotify(raw), err = $('#sp-err');
+    if (yp) return ytImport(yp, err, $('#sp-go'));
+    if (!p && raw && !/^https?:/i.test(raw)) { window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(raw), '_blank'); return err.textContent = 'Salin link video dari YouTube, lalu tempel di sini.'; }
     if (!p) return err.textContent = 'Link tidak valid. Gunakan link open.spotify.com/track, /album, atau /playlist.';
     if (S.songs.some(s => s.spId === p.id)) return err.textContent = 'Item ini sudah ada di library.';
     err.textContent = 'Mengambil data…'; const b = $('#sp-go'); b.disabled = true;
@@ -433,7 +444,7 @@ document.addEventListener('click', e => {
 function removeSongs(ids) {
   S.songs = S.songs.filter(s => !ids.includes(s.id)); S.favs = S.favs.filter(x => !ids.includes(x)); S.recent = S.recent.filter(x => !ids.includes(x));
   S.playlists.forEach(p => p.ids = p.ids.filter(x => !ids.includes(x))); save();
-  if (cur && ids.includes(cur.id)) { audio.pause(); cur = null; $('#spotify').classList.remove('show'); $('#np').hidden = true; }
+  if (cur && ids.includes(cur.id)) { audio.pause(); ytStop(); cur = null; $('#spotify').classList.remove('show'); $('#np').hidden = true; }
   queue = queue.filter(x => !ids.includes(x));
 }
 function act(a) {
@@ -549,6 +560,59 @@ function spSettings() {
   return `<div class="set" style="display:block"><b>Spotify — lagu penuh</b><small>Butuh akun Premium dan Client ID. Redirect URI: <code>${esc(redirect())}</code></small>${on
     ? `<p style="margin:10px 0">${spDev ? 'Terhubung. Pemutar siap.' : 'Terhubung. Menyiapkan pemutar…'}</p><button class="btn ghost" data-act="spdisc">Putuskan</button>`
     : `<div class="field" style="margin:10px 0"><input id="spcid" value="${esc(a.cid || '')}" placeholder="Client ID" autocomplete="off"></div><button class="btn" data-act="spconnect">Hubungkan</button>`}</div>`;
+}
+
+/* ===== YouTube: embed resmi, tanpa API key / login ===== */
+let yt = null, ytLive = false, ytPlaying = false, ytDur = 0, ytScript = false;
+function parseYT(u) {
+  let x; try { x = new URL(u); } catch { return null; }
+  const h = x.hostname.replace(/^(www|m|music)\./, ''), ok = s => s && /^[\w-]{11}$/.test(s) ? s : null;
+  if (h === 'youtu.be') return { id: ok(x.pathname.slice(1, 12)), list: x.searchParams.get('list') };
+  if (h !== 'youtube.com') return null;
+  const m = x.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]{11})/), id = ok(x.searchParams.get('v')) || (m && m[1]), list = x.searchParams.get('list');
+  return id || list ? { id, list } : null;
+}
+function ytLoad() {
+  return new Promise(res => {
+    if (yt && yt.loadVideoById) return res();
+    if (!ytScript) {
+      ytScript = true;
+      window.onYouTubeIframeAPIReady = () => { yt = new YT.Player('yt-box', { width: '100%', height: '100%', playerVars: { playsinline: 1, rel: 0 }, events: { onReady: () => res(), onStateChange: ytState, onError: ytErr } }); };
+      const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
+    } else { const t = setInterval(() => { if (yt && yt.loadVideoById) { clearInterval(t); res(); } }, 200); }
+  });
+}
+async function ytPlay(s) {
+  ytLive = true; ytPlaying = false; ytDur = 0; $('#yt').classList.add('show');
+  await ytLoad(); if (cur !== s) return;
+  yt.setVolume($('#vol').value * 100);
+  s.ytList ? yt.loadPlaylist({ list: s.ytList, listType: 'playlist' }) : yt.loadVideoById(s.ytId);
+}
+function ytStop() { if (ytLive && yt && yt.pauseVideo) yt.pauseVideo(); ytLive = false; ytPlaying = false; $('#yt').classList.remove('show'); }
+function ytState(e) {
+  const st = e.data; ytPlaying = st === 1;
+  if (st === 1) {
+    ytDur = yt.getDuration() || 0;
+    if (cur && cur.ytList) { const d = yt.getVideoData(); cur.title = d.title || cur.title; cur.artist = d.author || cur.artist; cur.art = `https://i.ytimg.com/vi/${d.video_id}/hqdefault.jpg`; }
+  }
+  if (st === 0 && !(cur && cur.ytList)) step(1, true);
+  paint();
+}
+function ytErr() { toast('Video tidak bisa diputar (dibatasi pemiliknya)'); if (queue.length > 1) step(1, true); }
+setInterval(() => {
+  if (!ytLive || !ytPlaying || seeking || !yt.getCurrentTime) return;
+  const t = yt.getCurrentTime(), d = yt.getDuration() || ytDur, p = d ? t / d * 100 : 0; ytDur = d;
+  $('#bar-prog i').style.width = p + '%'; $('#seek').value = p; $('#t-cur').textContent = fmt(t); $('#t-dur').textContent = fmt(d);
+}, 500);
+async function ytImport(p, err, b) {
+  if (p.id && S.songs.some(s => s.ytId === p.id) || !p.id && S.songs.some(s => s.ytList === p.list)) return err.textContent = 'Item ini sudah ada di library.';
+  if (!p.id) { S.songs.push({ id: uid(), src: 'youtube', ytList: p.list, title: 'Playlist YouTube', artist: 'YouTube', album: 'YouTube', art: '', dur: 0, added: Date.now(), imported: true }); save(); closeModal(); toast('Playlist ditambahkan'); return render(); }
+  err.textContent = 'Mengambil data…'; b.disabled = true;
+  let r = null, j = {};
+  try { r = await fetch('https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + p.id)); if (r.ok) j = await r.json(); } catch { r = null; }
+  if (r && !r.ok) { b.disabled = false; return err.textContent = 'Video tidak ditemukan atau tidak boleh disematkan.'; }
+  S.songs.push({ id: uid(), src: 'youtube', ytId: p.id, title: j.title || 'Video YouTube', artist: j.author_name || 'YouTube', album: 'YouTube', art: `https://i.ytimg.com/vi/${p.id}/hqdefault.jpg`, dur: 0, added: Date.now(), imported: true });
+  save(); closeModal(); toast('Lagu ditambahkan'); render();
 }
 
 /* ===== Boot ===== */
